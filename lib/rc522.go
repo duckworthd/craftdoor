@@ -36,7 +36,7 @@ func NewRC522Reader(cfg config.Config, s Subscriber) (Reader, error) {
 
 	rstPinReg := gpioreg.ByName(cfg.RSTPin)
 	if rstPinReg == nil {
-		return nil, fmt.Errorf("reset pin %s can not be found", cfg.RSTPin)
+		return nil, fmt.Errorf("Reset pin %s can not be found", cfg.RSTPin)
 	}
 
 	irqPinReg := gpioreg.ByName(cfg.IRQPin)

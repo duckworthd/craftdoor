@@ -1,4 +1,6 @@
 {
   "sqlite_file": "./develop.db",
-  "listen_http": ":8080"
+  "listen_http": ":8080",
+  "rst_pin": "GPIO25",
+  "irq_pin": "GPIO14"
 }
