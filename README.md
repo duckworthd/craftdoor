@@ -24,7 +24,7 @@ Instructions below for building, configuring, and launching the webserver.
 
 # Installation
 
-To start the software suite, do the following on the master Raspberry Pi device,
+To start the software suite, do the following on your development machine,
 
 1. Connect RC522 to master Raspberry Pi's hardware SPI interface. Follow
    instructions [here](https://github.com/pakohan/craftdoor.git).
@@ -36,17 +36,43 @@ To start the software suite, do the following on the master Raspberry Pi device,
   $ sudo apt install gcc-arm-linux-gnueabi libc6-armel-cross \
     libc6-dev-armel-cross binutils-arm-linux-gnueabi
   ```
+1. Run `scripts/release.sh`. This will create a folder, `release/`, containing
+   everything needed to run the server on a Raspberry pi
+   ```
+   $ bash scripts/release.sh
+   ```
+1. Turn on your Raspberry Pi and ensure it's connected to your local network.
+   Follow the instructions
+   [here](https://www.raspberrypi.org/documentation/remote-access/ssh/unix.md).
+   Ensure that you can SSH into the Raspberry Pi under hostname `raspberrypi`.
+   You can setup an SSH config entry like so in `$HOME/.ssh/config`,
+   ```
+   Host raspberrypi
+     Hostname 192.168.0.9  # Your IP address may vary!
+     User pi
+   ```
+1. Copy the contents of `release/` to the Raspberry Pi and run it. This will
+   launch a webserver on port :8080.
+   ```
+   $ rsync -r release/ pi@raspberrypi:/home/pi/craftdoor
+   $ ssh pi@raspberrypi 'cd /home/pi/craftdoor && ./main develop.json'
+   ```
+
+**Note**: If the RC522 RFID reader is not
+[detected](http://pkg.go.dev/periph.io/x/periph/host/rpi#Present), a fake,
+dummy interface will be used. This dummy interface cannot interact with RFID
+tags.
+
+If you'd like to ensure your code doesn't crash on your development machine,
+you can run the following. Note that the only the dummy interface is available
+in this context.
+
 1. Run `cmd/master/main.go`. This will launch a webserver listening on port 8080.
   ```
   $ git clone https://github.com/pakohan/craftdoor.git
   $ cd craftdoor/cmd/master
   $ go run main.go develop.json
   ```
-
-**Note**: If the RC522 RFID reader is not
-[detected](http://pkg.go.dev/periph.io/x/periph/host/rpi#Present), a fake,
-dummy interface will be used. This dummy interface cannot interact with RFID
-tags.
 
 # Usage
 

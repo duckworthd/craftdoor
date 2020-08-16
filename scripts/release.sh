@@ -13,10 +13,12 @@ PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "${PROJECT_ROOT}"
 
 # Clean the release/ directory.
+echo "Cleaning output directory..."
 rm -rf "${DST}"
 mkdir -p "${DST}"
 
 # Build for ARM.
+echo "Building binary..."
 env GOOS=linux \
     GOARCH=arm \
     GOARM=5 \
@@ -25,6 +27,7 @@ env GOOS=linux \
     go build -o "${DST}/main" "${SRC}/main.go"
 
 # Copy auxiliary files.
+echo "Copying auxiliary files..."
 cp ${SRC}/develop.json ${DST}/
 cp ${SRC}/schema.sql ${DST}/
 
