@@ -6,6 +6,11 @@
 set -e
 
 SRC="cmd/master/"
+BINARY="main"
+
+# SRC="cmd/demo/"
+# BINARY="read"
+
 DST="release/"
 
 # cd into project root.
@@ -24,13 +29,15 @@ env GOOS=linux \
     GOARM=5 \
     CGO_ENABLED=1 \
     CC=arm-linux-gnueabi-gcc \
-    go build -o "${DST}/main" "${SRC}/main.go"
+    go build -o "${DST}/${BINARY}" "${SRC}/${BINARY}.go"
 
 # Copy auxiliary files.
-echo "Copying auxiliary files..."
-cp ${SRC}/develop.json ${DST}/
-cp ${SRC}/schema.sql ${DST}/
+if [[ "${BINARY}" == "main" ]]; then
+    echo "Copying auxiliary files..."
+    cp ${SRC}/develop.json ${DST}/
+    cp ${SRC}/schema.sql ${DST}/
+fi
 
 echo "Finished building '${SRC}'. Copy '${DST}' to your RPi and run it. For example,"
 echo "$ rsync -r release/ pi@raspberrypi:/home/pi/craftdoor"
-echo "$ ssh pi@raspberrypi 'cd /home/pi/craftdoor && ./main develop.json'"
+echo "$ ssh pi@raspberrypi 'cd /home/pi/craftdoor && ./${BINARY}'"
