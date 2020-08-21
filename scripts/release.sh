@@ -8,7 +8,7 @@ set -e
 SRC="cmd/master/"
 BINARY="main"
 
-# SRC="cmd/demo/"
+# SRC="cmd/debug/"
 # BINARY="read"
 
 DST="release/"
