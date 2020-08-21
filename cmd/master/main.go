@@ -11,7 +11,9 @@ import (
 	"github.com/pakohan/craftdoor/controller"
 	"github.com/pakohan/craftdoor/lib"
 	"github.com/pakohan/craftdoor/model"
+	"github.com/pakohan/craftdoor/rfid"
 	"github.com/pakohan/craftdoor/service"
+	"periph.io/x/periph/host"
 	"periph.io/x/periph/host/rpi"
 )
 
@@ -55,17 +57,25 @@ func main() {
 func start(cfg config.Config, db *sqlx.DB, wg *sync.WaitGroup) error {
 	cl := lib.NewChangeListener()
 
-	var r lib.Reader
+	var r rfid.Reader
+	var err error
 	if rpi.Present() {
-		var err error
-		r, err = lib.NewRC522Reader(cfg, cl)
+		host.Init()
+
+		r, err = rfid.NewMFRC522Reader()
 		if err != nil {
 			return err
 		}
-		log.Printf("initializing rpi reader")
+
+		err = r.Initialize()
+		if err != nil {
+			return err
+		}
+
+		log.Printf("Initializing rpi reader")
 	} else {
-		r = lib.NewDummyReader()
-		log.Printf("initializing dummy reader")
+		r, _ = rfid.NewDummyReader()
+		log.Printf("Initializing dummy reader")
 	}
 
 	m := model.New(db)
@@ -91,7 +101,7 @@ func start(cfg config.Config, db *sqlx.DB, wg *sync.WaitGroup) error {
 	// }()
 
 	log.Printf("listening on %s", cfg.ListenHTTP)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err == http.ErrServerClosed {
 		err = nil
 	}

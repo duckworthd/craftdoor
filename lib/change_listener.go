@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/google/uuid"
@@ -31,7 +32,7 @@ func NewChangeListener() *ChangeListener {
 // or when the state changes
 func (cl *ChangeListener) WaitForChange(ctx context.Context, id uuid.UUID) (State, error) {
 	cl.lock.Lock()
-	if cl.currentState.ID != id {
+	if cl.currentState.UUID != id {
 		res := cl.currentState
 		cl.lock.Unlock()
 		return res, nil
@@ -59,7 +60,7 @@ func (cl *ChangeListener) WaitForChange(ctx context.Context, id uuid.UUID) (Stat
 // ReturnFirstKey returns as soon as a key is put in front of the reader
 func (cl *ChangeListener) ReturnFirstKey(ctx context.Context) (State, error) {
 	cl.lock.Lock()
-	if cl.currentState.IsCardAvailable {
+	if cl.currentState.IsTagAvailable {
 		res := cl.currentState
 		cl.lock.Unlock()
 		return res, nil
@@ -91,12 +92,14 @@ func (cl *ChangeListener) Notify(data [3]string) {
 
 	log.Printf("state changed to: %s", data[0])
 
-	cl.currentState.IsCardAvailable = data[0] != ""
-	cl.currentState.ID = uuid.New()
-	cl.currentState.CardData = make([]string, len(data))
-	for i, s := range data {
-		cl.currentState.CardData[i] = fmt.Sprintf("% x", s)
+	cl.currentState.IsTagAvailable = data[0] != ""
+	cl.currentState.UUID = uuid.New()
+
+	var builder strings.Builder
+	for _, s := range data {
+		builder.WriteString(fmt.Sprintf("% x", s))
 	}
+	cl.currentState.TagInfo.Data = builder.String()
 
 	for _, l := range cl.listeners {
 		l <- cl.currentState

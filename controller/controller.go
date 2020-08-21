@@ -4,14 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/pakohan/craftdoor/controller/doors"
-	"github.com/pakohan/craftdoor/controller/keys"
-	"github.com/pakohan/craftdoor/controller/members"
-	"github.com/pakohan/craftdoor/controller/roles"
 	"github.com/pakohan/craftdoor/model"
 	"github.com/pakohan/craftdoor/service"
 )
@@ -56,41 +52,53 @@ func New(m model.Model, s *service.Service) http.Handler {
 			}),
 		)(r),
 	}
-	r.Path("/state").Methods(http.MethodGet).HandlerFunc(c.returnState)
-	r.Path("/init").Methods(http.MethodPost).HandlerFunc(c.initCard)
+	r.Path("/").Methods(http.MethodGet).HandlerFunc(c.ReadNextTag)
 
-	doors.New(r.PathPrefix("/doors").Subrouter(), m)
-	members.New(r.PathPrefix("/members").Subrouter(), m)
-	roles.New(r.PathPrefix("/roles").Subrouter(), m)
-	keys.New(r.PathPrefix("/keys").Subrouter(), m, s)
+	// doors.New(r.PathPrefix("/doors").Subrouter(), m)
+	// members.New(r.PathPrefix("/members").Subrouter(), m)
+	// roles.New(r.PathPrefix("/roles").Subrouter(), m)
+	// keys.New(r.PathPrefix("/keys").Subrouter(), m, s)
 	return c
 }
 
-func (c *controller) returnState(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.URL.Query().Get("id"))
+// func (c *controller) returnState(w http.ResponseWriter, r *http.Request) {
+// 	id, err := uuid.Parse(r.URL.Query().Get("id"))
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	state, err := c.s.WaitForChange(r.Context(), id)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	err = json.NewEncoder(w).Encode(state)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		log.Printf("err encoding response: %s", err)
+// 		return
+// 	}
+// }
+
+// ReadNextTag reads the next available RFID tag and returns its data.
+func (c *controller) ReadNextTag(resp http.ResponseWriter, req *http.Request) {
+	log.Printf("Attempting to read next available tag...")
+	var timeout time.Duration = 5 * time.Second
+	state, err := c.s.ReadNextTag(timeout)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("Failed in call to Service.ReadNextTag(): %s", err)
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	state, err := c.s.WaitForChange(r.Context(), id)
+	err = json.NewEncoder(resp).Encode(state)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("Failed to encode JSON: %s", err)
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(state)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("err encoding response: %s", err)
-		return
-	}
-}
-
-func (c *controller) initCard(w http.ResponseWriter, r *http.Request) {
-	err := c.s.InitKey(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	log.Printf("Succesfully return tag: %s", state.UUID)
 }

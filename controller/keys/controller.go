@@ -23,7 +23,7 @@ func New(r *mux.Router, m model.Model, s *service.Service) {
 		s: s,
 	}
 
-	r.Methods(http.MethodPost).Path("/register").HandlerFunc(c.register)
+	// r.Methods(http.MethodPost).Path("/register").HandlerFunc(c.register)
 	r.Methods(http.MethodPost).Path("/{id}/member/{member_id}").HandlerFunc(c.assignMember)
 	r.Methods(http.MethodGet).HandlerFunc(c.list)
 }
@@ -41,18 +41,18 @@ func (c *controller) list(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *controller) register(w http.ResponseWriter, r *http.Request) {
-	k, err := c.s.RegisterKey(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// func (c *controller) register(w http.ResponseWriter, r *http.Request) {
+// 	k, err := c.s.RegisterKey(r.Context())
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	err = json.NewEncoder(w).Encode(k)
-	if err != nil {
-		log.Printf("err writing response: %s", err.Error())
-	}
-}
+// 	err = json.NewEncoder(w).Encode(k)
+// 	if err != nil {
+// 		log.Printf("err writing response: %s", err.Error())
+// 	}
+// }
 
 func (c *controller) assignMember(w http.ResponseWriter, r *http.Request) {
 	keyID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
