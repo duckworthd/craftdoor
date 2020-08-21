@@ -17,8 +17,6 @@ func FmtSector(sector int, data []byte, auth *AuthBlock) string {
 		line := fmt.Sprintf("%02d.%d | %s\n", sector, i, FmtBlock(data[start:end]))
 		builder.WriteString(line)
 	}
-	keyA := FmtKey(auth.KeyA)
-	keyB := FmtKey(auth.KeyB)
 	line := fmt.Sprintf("     | %s\n", FmtAuthBlock(auth))
 	builder.WriteString(line)
 	return builder.String()

@@ -40,7 +40,7 @@ func main() {
 
 	// Initialize RFID Reader.
 	log.Println("Creating MFRC522 SPI device.")
-	reader, _ := rfid.NewReader()
+	reader, _ := rfid.NewMFRC522Reader()
 	err := reader.Initialize()
 	if err != nil {
 		log.Fatal(err)
