@@ -22,14 +22,12 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/pakohan/craftdoor/rfid"
-	"periph.io/x/periph/experimental/devices/mfrc522"
 	"periph.io/x/periph/host"
 )
 
@@ -80,7 +78,7 @@ func main() {
 				continue
 			}
 
-			fmt.Printf("%s\n", FmtSector(sector, data, auth))
+			fmt.Printf("%s\n", rfid.FmtSector(sector, data, auth))
 			sector++
 		}
 	}()
@@ -91,42 +89,4 @@ func main() {
 			return
 		}
 	}
-}
-
-// FmtSector creates a string representation of a single sector.
-func FmtSector(sector int, data []byte, auth *rfid.AuthBlock) string {
-	var builder strings.Builder
-	for i := 0; i < rfid.NumDataBlocksPerSector; i++ {
-		start := i * rfid.NumBytesPerBlock
-		end := (i + 1) * rfid.NumBytesPerBlock
-		line := fmt.Sprintf("%02d.%d | %s\n", sector, i, FmtBlock(data[start:end]))
-		builder.WriteString(line)
-	}
-	keyA := hex.EncodeToString(KeyToBytes(auth.KeyA))
-	keyB := hex.EncodeToString(KeyToBytes(auth.KeyB))
-	line := fmt.Sprintf("     | KeyA=%s KeyB=%s BlocksAccess=(%s)\n", keyA, keyB, auth.Permissions.String())
-	builder.WriteString(line)
-	return builder.String()
-}
-
-// FmtBlock creates a string representation for a single 16-byte block of data.
-func FmtBlock(data []byte) string {
-	var builder strings.Builder
-	for i := 0; i < rfid.NumBytesPerBlock; i++ {
-		builder.WriteString(fmt.Sprintf("%s", hex.EncodeToString(data[i:i+1])))
-		if i != rfid.NumBytesPerBlock-1 {
-			builder.WriteString(" ")
-		}
-	}
-	return builder.String()
-}
-
-// KeyToBytes converts a Key to a byte array.
-func KeyToBytes(key mfrc522.Key) []byte {
-	var result []byte
-	result = make([]byte, 6)
-	for i := 0; i < 6; i++ {
-		result[i] = key[i]
-	}
-	return result
 }
