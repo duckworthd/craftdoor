@@ -67,6 +67,10 @@ func main() {
 			data, err := reader.ReadDataBlocks(timeout, sector)
 			if err != nil {
 				log.Printf("Error in ReadSectorData: %s", err)
+				if strings.Contains(err.Error(), "mfrc522 lowlevel: IRQ error") {
+					// See https://github.com/google/periph/issues/425
+					reader.Initialize()
+				}
 				continue
 			}
 

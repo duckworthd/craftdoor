@@ -5,11 +5,15 @@
 
 set -e
 
-SRC="cmd/master/"
-BINARY="main"
-
-# SRC="cmd/debug/"
-# BINARY="read"
+BINARY="${1:-main}"
+if [[ "${BINARY}" == "main" ]]; then
+    SRC="cmd/master/"
+elif [[ "${BINARY}" == "read" ]]; then
+    SRC="cmd/debug/"
+else
+    echo "Unrecognized binary: ${BINARY}"
+    exit 1
+fi
 
 DST="release/"
 
@@ -39,5 +43,5 @@ if [[ "${BINARY}" == "main" ]]; then
 fi
 
 echo "Finished building '${SRC}'. Copy '${DST}' to your RPi and run it. For example,"
-echo "$ rsync -r release/ pi@raspberrypi:/home/pi/craftdoor"
-echo "$ ssh pi@raspberrypi 'cd /home/pi/craftdoor && ./${BINARY}'"
+echo "$ rsync -r release/ raspberrypi:/home/pi/craftdoor"
+echo "$ ssh raspberrypi 'cd /home/pi/craftdoor && ./${BINARY}'"
