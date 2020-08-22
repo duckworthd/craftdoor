@@ -47,10 +47,6 @@ func readFile(filename string) (Config, error) {
 
 // Config represents the config file contents
 type Config struct {
-	MasterKey  string `json:"master_key"`
 	SQLiteFile string `json:"sqlite_file"`
 	ListenHTTP string `json:"listen_http"`
-	Device     string `json:"device"`
-	RSTPin     string `json:"rst_pin"`
-	IRQPin     string `json:"irq_pin"`
 }

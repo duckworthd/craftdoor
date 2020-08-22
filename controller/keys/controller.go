@@ -2,7 +2,6 @@ package keys
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -48,7 +47,7 @@ func (c *controller) list(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		log.Printf("err encoding response: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -68,7 +67,7 @@ func (c *controller) create(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(t)
 	if err != nil {
-		log.Printf("err encoding response: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -88,8 +87,8 @@ func (c *controller) get(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		log.Printf("err encoding response: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -110,18 +109,17 @@ func (c *controller) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse Member ID.
-	memberID, err := strconv.ParseInt(r.Form.Get("member_id"), base, bitSize)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	t.MemberID = &memberID
-
 	// Update database.
 	err = c.m.KeyModel.Update(r.Context(), &t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Respond with new database entry.
+	err = json.NewEncoder(w).Encode(t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -157,9 +155,11 @@ func (c *controller) register(w http.ResponseWriter, r *http.Request) {
 	}
 	if !state.IsTagAvailable {
 		http.Error(w, "RFID tag not found. Is the tag in front of the reader?", http.StatusInternalServerError)
+		return
 	}
 	if state.TagInfo.ID == "" {
 		http.Error(w, "RFID tag's ID is empty. This is an internal error and should not happen...", http.StatusInternalServerError)
+		return
 	}
 	t.UUID = state.TagInfo.ID
 

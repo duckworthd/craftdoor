@@ -55,8 +55,6 @@ func main() {
 }
 
 func start(cfg config.Config, db *sqlx.DB, wg *sync.WaitGroup) error {
-	cl := lib.NewChangeListener()
-
 	var r rfid.Reader
 	var err error
 	if rpi.Present() {
@@ -79,7 +77,7 @@ func start(cfg config.Config, db *sqlx.DB, wg *sync.WaitGroup) error {
 	}
 
 	m := model.New(db)
-	s := service.New(m, r, cl)
+	s := service.New(m, r)
 	c := controller.New(m, s)
 
 	srv := http.Server{

@@ -15,77 +15,29 @@ import (
 
 // Service contains the business logic
 type Service struct {
-	m  model.Model
-	r  rfid.Reader
-	cl *lib.ChangeListener
+	m model.Model
+	r rfid.Reader
 }
 
 // New returns a new service instance
-func New(m model.Model, r rfid.Reader, cl *lib.ChangeListener) *Service {
+func New(m model.Model, r rfid.Reader) *Service {
 	s := &Service{
-		m:  m,
-		r:  r,
-		cl: cl,
+		m: m,
+		r: r,
 	}
+
+	// Start infinite loop that unlocks the door.
 	go s.DoorAccessLoop()
+
 	return s
 }
-
-// // WaitForChange returns as soon as the state id is different to the one passed
-// func (s *Service) WaitForChange(ctx context.Context, id uuid.UUID) (lib.State, error) {
-// 	return s.cl.WaitForChange(ctx, id)
-// }
-
-// // RegisterKey inserts the key id of the next being presented to the reader into the table
-// func (s *Service) RegisterKey(ctx context.Context) (key.Key, error) {
-// 	log.Printf("registering key")
-// 	state, err := s.cl.ReturnFirstKey(ctx)
-// 	if err != nil {
-// 		return key.Key{}, err
-// 	}
-
-// 	log.Printf("got key %s", state.TagInfo[0])
-
-// 	k := key.Key{
-// 		Secret:    state.TagInfo[0],
-// 		AccessKey: uuid.New().String(),
-// 	}
-// 	err = s.m.KeyModel.Create(ctx, &k)
-// 	if err != nil {
-// 		return key.Key{}, err
-// 	}
-
-// 	log.Printf("inserted as key id %d", k.ID)
-
-// 	return k, nil
-// }
-
-// func (s *Service) door() {
-// 	uid := uuid.Nil
-// 	for {
-// 		state, err := s.WaitForChange(context.Background(), uid)
-// 		if err != nil {
-// 			log.Printf("got err waiting for change: %s", err.Error())
-// 			continue
-// 		} else if !state.IsTagAvailable {
-// 			continue
-// 		}
-// 		uid = state.ID
-
-// 		res, err := s.m.KeyModel.IsAccessAllowed(context.Background(), state.TagInfo[0], 1)
-// 		if err != nil {
-// 			log.Printf("got err checking whether key is allowed to access: %s", err.Error())
-// 		} else {
-// 			log.Printf("key %s is allowed to access door %d -> %t", state.TagInfo[0], 1, res)
-// 		}
-// 	}
-// }
 
 // ReadNextTag reads the next available RFID tag before the timeout.
 //
 // If timeout is reached, a state with an empty TagInfo field is returned.
 func (s *Service) ReadNextTag(timeout time.Duration) (*lib.State, error) {
 	result := &lib.State{
+		// TODO(duckworthd): Replace with a new UUID. Use UUID for state tracking.
 		UUID: uuid.UUID{},
 	}
 
@@ -153,6 +105,7 @@ func (s *Service) DoorAccessLoop() {
 
 		if accessAllowed {
 			log.Printf("Access granted for key=%s.", state.TagInfo.ID)
+			// TODO(duckworthd): Unlock a real door.
 		} else {
 			log.Printf("Access NOT granted for key=%s.", state.TagInfo.ID)
 		}

@@ -19,6 +19,8 @@ import (
 )
 
 // Key used for all operations.
+//
+// TODO(duckworthd): Add support for user-defined keys.
 var key = mfrc522.DefaultKey
 
 // MFRC522Reader wraps an MFRC522 MFRC522Reader on SPI.

@@ -2,7 +2,6 @@ package members
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -49,7 +48,8 @@ func (c *controller) create(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(t)
 	if err != nil {
-		log.Printf("err encoding response: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -62,7 +62,8 @@ func (c *controller) list(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		log.Printf("err encoding response: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -81,8 +82,8 @@ func (c *controller) get(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		log.Printf("err encoding response: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -103,6 +104,13 @@ func (c *controller) update(w http.ResponseWriter, r *http.Request) {
 	err = c.m.MemberModel.Update(r.Context(), t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Respond with new database entry.
+	err = json.NewEncoder(w).Encode(t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
