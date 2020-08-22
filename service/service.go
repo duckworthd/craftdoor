@@ -136,7 +136,7 @@ func (s *Service) DoorAccessLoop() {
 		// TODO(duckworthd): There is contention for ownership of the tag reader. Find a better way...
 		state, err := s.ReadNextTag(5 * time.Second)
 		if err != nil {
-			log.Printf("Error encountered in OpenDoorLoop: %s", err)
+			log.Printf("Error encountered in DoorAccessLoop: %s", err)
 			continue
 		}
 
