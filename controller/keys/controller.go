@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pakohan/craftdoor/model"
-	"github.com/pakohan/craftdoor/model/key"
 	"github.com/pakohan/craftdoor/service"
 )
 
@@ -30,8 +29,8 @@ func New(r *mux.Router, m model.Model, s *service.Service) {
 	r.Methods(http.MethodPost).HandlerFunc(c.create)
 
 	// GET requests.
+	r.Methods(http.MethodGet).Path("/{id}").HandlerFunc(c.get)
 	r.Methods(http.MethodGet).HandlerFunc(c.list)
-	// TODO(duckworthd): Implement a method for fetching details about a single key.
 
 	// PUT requests.
 	r.Methods(http.MethodPut).Path("/{id}").HandlerFunc(c.update)
@@ -54,7 +53,7 @@ func (c *controller) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *controller) create(w http.ResponseWriter, r *http.Request) {
-	t := key.Key{}
+	t := model.Key{}
 	err := json.NewDecoder(r.Body).Decode(&t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -74,8 +73,28 @@ func (c *controller) create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *controller) get(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	res, err := c.m.KeyModel.Get(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		log.Printf("err encoding response: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func (c *controller) update(w http.ResponseWriter, r *http.Request) {
-	t := key.Key{}
+	t := model.Key{}
 	err := json.NewDecoder(r.Body).Decode(&t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -123,7 +142,7 @@ func (c *controller) delete(w http.ResponseWriter, r *http.Request) {
 
 func (c *controller) register(w http.ResponseWriter, r *http.Request) {
 	// Populate what fields one can from JSON.
-	t := key.Key{}
+	t := model.Key{}
 	err := json.NewDecoder(r.Body).Decode(&t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

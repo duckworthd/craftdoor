@@ -14,11 +14,15 @@ http POST ${HOSTNAME}/members name="George Harrison"
 http POST ${HOSTNAME}/keys uuid="35c17053d7" member_id:=1
 http POST ${HOSTNAME}/keys uuid="ffffffffff" member_id:=2
 
-echo "Put a new key in front of the card reader now..."
-http POST ${HOSTNAME}/keys/new member_id:=3
-
-http GET ${HOSTNAME}/members
 http GET ${HOSTNAME}/keys
-
 http DELETE ${HOSTNAME}/keys/1
 http GET ${HOSTNAME}/keys
+http GET ${HOSTNAME}/keys/1
+
+http GET ${HOSTNAME}/members
+http DELETE ${HOSTNAME}/members/1
+http GET ${HOSTNAME}/members
+http GET ${HOSTNAME}/members/1
+
+echo "Put a new key in front of the card reader now..."
+http POST ${HOSTNAME}/keys/new member_id:=3
