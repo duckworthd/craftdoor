@@ -36,10 +36,10 @@ To start the software suite, do the following on your development machine,
   $ sudo apt install gcc-arm-linux-gnueabi libc6-armel-cross \
     libc6-dev-armel-cross binutils-arm-linux-gnueabi
   ```
-1. Run `scripts/release.sh`. This will create a folder, `release/`, containing
+1. Run `scripts/build.sh`. This will create a folder, `release/`, containing
    everything needed to run the server on a Raspberry pi
    ```
-   $ bash scripts/release.sh
+   $ bash scripts/build.sh
    ```
 1. Turn on your Raspberry Pi and ensure it's connected to your local network.
    Follow the instructions
@@ -54,8 +54,7 @@ To start the software suite, do the following on your development machine,
 1. Copy the contents of `release/` to the Raspberry Pi and run it. This will
    launch a webserver on port :8080.
    ```
-   $ rsync -r release/ pi@raspberrypi:/home/pi/craftdoor
-   $ ssh pi@raspberrypi 'cd /home/pi/craftdoor && ./main develop.json'
+   $ bash scripts/deploy.sh
    ```
 
 **Note**: If the RC522 RFID reader is not
@@ -79,24 +78,24 @@ in this context.
 Once `main.go` is launched, the following endpoints are available via the HTTP
 webserver,
 
-- `POST /init`: Writes a default key to an active RFID tag. Only for testing.
-- `GET /state?id=<UUID>`: Get the state of a particular RFID tag as soon as
-  it's put in front of the reader. You must specify which tag you want by its
-  UUID.
+- `GET /`: Get the details of the next RFID tag put in front of the reader.
 
 For doors,
 
-- `GET /doors`: list doors in database
-- `POST /doors`: Create a new door.
-- `PUT /doors/<id>`: Update an existing door.
-- `DELETE /doors/<id>`: Delete an existing door.
+- `GET /members`: list doors in database
+- `GET /members/<id>`: get detailed information about a single member.
+- `POST /members`: Create a new member.
+- `PUT /members/<id>`: Update an existing member.
+- `DELETE /members/<id>`: Delete an existing member.
 
-Similar to doors, one can query and manager members and roles via `/members` and `/roles`.
+Similar to doors, one can query and manage keys via `/keys`.
 
 # Code Organization
 
 ```
 cmd/
+  debug/
+    read.go          # debug binary for reading all data on an RFID tag.
   master/
     develop.db       # sqlite database used during development
     develop.json     # JSON config used during development
@@ -108,14 +107,18 @@ controller/
   controller.go      # HTTP request handling logic.
   ...
 lib/
-  change_listener.go
   db.go              # initialize database schema
-  rc522.go           # reader implementation for RC522 RFID reader.
-  reader.go          # interfaces for an RFID reader
-  state.go           # State of an RFID tag.
+  state.go           # State of the system.
 model/               # database definitions, API
-  model.go
+  model.go           # interface for interacting with the database.
   ...
+rfid/                # wrapper for RFID readers/writers
+  dummy.go           # dummy implementation of interface Reader
+  fmt.go             # format contents of an RFID tag as a string.
+  mfrc522.go         # MFRC522 implementation of interface Reader
+  reader.go          # Interface for interacting with RFID readers.
 service/             # business logic for adding/removing keys, doors, etc
+  service.go         # door-opening loop, access to RFID reader.
 vendor/              # third-party code
+  ...
 ```
