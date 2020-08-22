@@ -18,7 +18,10 @@ func New(db *sqlx.DB) *Model {
 
 // Member represents a single row
 type Member struct {
-	ID   int64  `json:"id" db:"id"`
+	// Member ID. Auto incremented.
+	ID int64 `json:"id" db:"id"`
+
+	// Member's name.
 	Name string `json:"name" db:"name"`
 }
 

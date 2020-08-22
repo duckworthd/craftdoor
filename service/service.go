@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/hex"
 	"log"
 	"strings"
@@ -26,7 +27,7 @@ func New(m model.Model, r rfid.Reader, cl *lib.ChangeListener) *Service {
 		r:  r,
 		cl: cl,
 	}
-	// go s.door()
+	go s.DoorAccessLoop()
 	return s
 }
 
@@ -80,7 +81,9 @@ func New(m model.Model, r rfid.Reader, cl *lib.ChangeListener) *Service {
 // 	}
 // }
 
-// ReadNextTag reads the next available RFID tag before the next timeout.
+// ReadNextTag reads the next available RFID tag before the timeout.
+//
+// If timeout is reached, a state with an empty TagInfo field is returned.
 func (s *Service) ReadNextTag(timeout time.Duration) (*lib.State, error) {
 	result := &lib.State{
 		UUID: uuid.UUID{},
@@ -100,14 +103,20 @@ func (s *Service) ReadNextTag(timeout time.Duration) (*lib.State, error) {
 
 			// Timeout.
 			if strings.Contains(err.Error(), "lowlevel: timeout waiting for IRQ edge") {
-				log.Printf("Timed out waiting for next RFID tag.")
 				result.IsTagAvailable = false
 				result.TagInfo = nil
 				break
 			}
 		}
 
+		if len(uid) == 0 {
+			log.Printf("Encountered empty UID. Retrying.")
+			timeout -= time.Since(start)
+			continue
+		}
+
 		// Successful read.
+		log.Printf("Successfully read tag: %s", hex.EncodeToString(uid))
 		result.IsTagAvailable = true
 		result.TagInfo = &lib.TagInfo{
 			ID:   hex.EncodeToString(uid),
@@ -116,4 +125,37 @@ func (s *Service) ReadNextTag(timeout time.Duration) (*lib.State, error) {
 		break
 	}
 	return result, nil
+}
+
+// DoorAccessLoop is an infinite loop monitoring RFID tags put in front of the door.
+//
+// When a new RFID tag is put in front of the door and the tag is approved for entry, the door is unlocked.
+func (s *Service) DoorAccessLoop() {
+	log.Println("Starting DoorAccessLoop()...")
+	for {
+		// TODO(duckworthd): There is contention for ownership of the tag reader. Find a better way...
+		state, err := s.ReadNextTag(5 * time.Second)
+		if err != nil {
+			log.Printf("Error encountered in OpenDoorLoop: %s", err)
+			continue
+		}
+
+		if !state.IsTagAvailable {
+			continue
+		}
+
+		// TODO(duckworthd): Add support for >1 doors.
+		accessAllowed, err := s.m.KeyModel.IsAccessAllowed(context.Background(), state.TagInfo.ID)
+		if err != nil {
+			log.Printf("Error determining in IsAccessAllowed() for key=%s.", state.TagInfo.ID)
+			continue
+		}
+
+		if accessAllowed {
+			log.Printf("Access granted for key=%s.", state.TagInfo.ID)
+		} else {
+			log.Printf("Access NOT granted for key=%s.", state.TagInfo.ID)
+		}
+		time.Sleep(3 * time.Second)
+	}
 }

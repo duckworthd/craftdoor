@@ -7,10 +7,10 @@ set -eux
 
 RELEASE_DIR="release/"
 REMOTE_DIR="/home/pi/craftdoor"
-HOSTNAME="pi@raspberrypi"
+HOSTNAME="raspberrypi"
 
 # Copy contents of RELEASE_DIR to Raspberry Pi.
-rsync -r ${RELEASE_DIR} ${HOSTNAME}:${REMOTE_DIR}
+rsync -r --delete ${RELEASE_DIR} ${HOSTNAME}:${REMOTE_DIR}
 
 # Launch main.go. Ensure that it exits on Ctrl+C.
 ssh -t -t ${HOSTNAME} "cd ${REMOTE_DIR} && ./main develop.json"
