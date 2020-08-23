@@ -21,6 +21,8 @@ rsync -r --delete ${RELEASE_DIR} ${HOSTNAME}:${REMOTE_DIR}
 
 # Launch main.go. Ensure that it exits on Ctrl+C.
 ssh -t -t ${HOSTNAME} " \
+sudo systemctl daemon-reload &&
+sudo systemctl stop craftdoor.service &&
 cd ${REMOTE_DIR} && \
 export CRAFTDOOR_ROOT=${REMOTE_DIR} && \
 ./${BINARY} ${FLAGS}"
