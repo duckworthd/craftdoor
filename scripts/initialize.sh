@@ -4,7 +4,7 @@
 
 set -eux
 
-HOSTNAME="http://192.168.0.9:8080"
+HOSTNAME="${1:-http://localhost:8080}"
 
 http POST ${HOSTNAME}/members name="John Lennon"
 http POST ${HOSTNAME}/members name="Ringo Starr"
