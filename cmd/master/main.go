@@ -82,7 +82,7 @@ func start(cfg *config.Config, db *sqlx.DB) error {
 	// Setup backend database, etc.
 	m := model.New(db)
 	s := service.New(m, r)
-	c := controller.New(m, s)
+	c := controller.New(cfg, m, s)
 
 	// Start HTTP server.
 	srv := http.Server{

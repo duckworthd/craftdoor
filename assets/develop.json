@@ -1,5 +1,6 @@
 {
   "sqlite_file": "${CRAFTDOOR_ROOT}/develop.db",
   "sqlite_schema_file": "${CRAFTDOOR_ROOT}/schema.sql",
+  "static_assets_dir": "${CRAFTDOOR_ROOT}/static",
   "listen_http": ":8080"
 }

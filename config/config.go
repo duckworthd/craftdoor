@@ -21,6 +21,9 @@ type Config struct {
 	// Path to schema.sql used to initialize SQLite database.
 	SQLiteSchemaFile string `json:"sqlite_schema_file"`
 
+	// Path to static assets for web frontend.
+	StaticAssetsDir string `json:"static_assets_dir"`
+
 	// Port for REST API.
 	ListenHTTP string `json:"listen_http"`
 }
@@ -47,6 +50,7 @@ func InitializeConfig(configPath string) (*Config, error) {
 	// Expand environment variables.
 	config.SQLiteFile = os.ExpandEnv(config.SQLiteFile)
 	config.SQLiteSchemaFile = os.ExpandEnv(config.SQLiteSchemaFile)
+	config.StaticAssetsDir = os.ExpandEnv(config.StaticAssetsDir)
 
 	// Print out final config.
 	marshalledText, _ := json.MarshalIndent(config, "", " ")

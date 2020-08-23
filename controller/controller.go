@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/pakohan/craftdoor/config"
 	"github.com/pakohan/craftdoor/controller/keys"
 	"github.com/pakohan/craftdoor/controller/members"
 	"github.com/pakohan/craftdoor/model"
@@ -22,7 +23,7 @@ type controller struct {
 }
 
 // New returns a new http.Handler
-func New(m model.Model, s *service.Service) http.Handler {
+func New(cfg *config.Config, m model.Model, s *service.Service) http.Handler {
 	r := mux.NewRouter()
 	c := &controller{
 		m: m,
@@ -54,32 +55,21 @@ func New(m model.Model, s *service.Service) http.Handler {
 			}),
 		)(r),
 	}
-	r.Path("/").Methods(http.MethodGet).HandlerFunc(c.ReadNextTag)
-	members.New(r.PathPrefix("/members").Subrouter(), m)
-	keys.New(r.PathPrefix("/keys").Subrouter(), m, s)
+	r.Path("/api").Methods(http.MethodGet).HandlerFunc(c.ReadNextTag)
+	members.New(r.PathPrefix("/api/members").Subrouter(), m)
+	keys.New(r.PathPrefix("/api/keys").Subrouter(), m, s)
+
+	// Assume everything other route is a static asset.
+	//
+	// TODO(duckworthd): The webapp changes the URL when switching between tabs,
+	// but refreshing the page results in a 404. Figure out how to fix this.
+	fileServerPath := cfg.StaticAssetsDir
+	fileServer := http.FileServer(http.Dir(fileServerPath))
+	log.Printf("Serving static files from %s", fileServerPath)
+	r.PathPrefix("/").Methods(http.MethodGet).Handler(fileServer)
+
 	return c
 }
-
-// func (c *controller) returnState(w http.ResponseWriter, r *http.Request) {
-// 	id, err := uuid.Parse(r.URL.Query().Get("id"))
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	state, err := c.s.WaitForChange(r.Context(), id)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	err = json.NewEncoder(w).Encode(state)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		log.Printf("err encoding response: %s", err)
-// 		return
-// 	}
-// }
 
 // ReadNextTag reads the next available RFID tag and returns its data.
 func (c *controller) ReadNextTag(resp http.ResponseWriter, req *http.Request) {
