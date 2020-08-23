@@ -1,0 +1,5 @@
+{
+  "sqlite_file": "${CRAFTDOOR_ROOT}/develop.db",
+  "sqlite_schema_file": "${CRAFTDOOR_ROOT}/schema.sql",
+  "listen_http": ":8080"
+}

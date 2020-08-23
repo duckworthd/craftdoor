@@ -1,9 +1,19 @@
+// Craftdoor server.
+//
+// Launches a binary that does the following,
+// - Launches a REST API for managing a database of members, keys
+// - Launches an infinite loop for authenticating door access.
+//
+// Example Usage:
+// $ export CRAFTDOOR_ROOT_VAR="$(pwd)/assets"
+// $ go run cmd/master/main.go --config="${CRAFTDOOR_ROOT}/develop.json"
+//
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -20,33 +30,24 @@ import (
 func main() {
 	log.SetFlags(log.Llongfile)
 
-	cfg, err := config.ReadConfig()
+	// Command line flags.
+	configPath := flag.String("config", "./develop.json", "Path to config file.")
+	flag.Parse()
+
+	// Read config.
+	cfg, err := config.InitializeConfig(*configPath)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	db, err := openDB(cfg.SQLiteFile)
+	db, err := lib.OpenDB(cfg)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	defer wg.Wait()
+	// TODO(duckworthd): Shut down database gracefully.
 
-	// c := make(chan os.Signal, 1)
-	// signal.Notify(c)
-	// go func() {
-	// 	defer wg.Done()
-	// 	<-c
-	// 	log.Printf("shutting down DB")
-	// 	e := db.Close()
-	// 	if e != nil {
-	// 		log.Printf("err closing db: %s", e.Error())
-	// 	}
-	// }()
-
-	err = start(cfg, db, wg)
+	err = start(cfg, db)
 	if err != nil {
 		// c <- os.Interrupt
 		log.Panic(err)
@@ -54,7 +55,8 @@ func main() {
 
 }
 
-func start(cfg config.Config, db *sqlx.DB, wg *sync.WaitGroup) error {
+func start(cfg *config.Config, db *sqlx.DB) error {
+	// Initialize RFID reader.
 	var r rfid.Reader
 	var err error
 	if rpi.Present() {
@@ -76,27 +78,16 @@ func start(cfg config.Config, db *sqlx.DB, wg *sync.WaitGroup) error {
 		log.Printf("Initializing dummy reader")
 	}
 
+	// Setup backend database, etc.
 	m := model.New(db)
 	s := service.New(m, r)
 	c := controller.New(m, s)
 
+	// Start HTTP server.
 	srv := http.Server{
 		Addr:    cfg.ListenHTTP,
 		Handler: c,
 	}
-
-	// wg.Add(1)
-	// sig := make(chan os.Signal, 1)
-	// signal.Notify(sig)
-	// go func() {
-	// 	defer wg.Done()
-	// 	<-sig
-	// 	log.Printf("shutting down HTTP server")
-	// 	e := srv.Shutdown(context.Background())
-	// 	if e != nil {
-	// 		log.Printf("err closing HTTP server: %s", e.Error())
-	// 	}
-	// }()
 
 	log.Printf("listening on %s", cfg.ListenHTTP)
 	err = srv.ListenAndServe()
@@ -104,22 +95,4 @@ func start(cfg config.Config, db *sqlx.DB, wg *sync.WaitGroup) error {
 		err = nil
 	}
 	return err
-}
-
-func openDB(filename string) (*sqlx.DB, error) {
-	db, err := sqlx.Connect("sqlite3", filename)
-	if err != nil {
-		return nil, err
-	}
-
-	err = lib.InitDBSchema(db)
-	if err != nil {
-		e := db.Close()
-		if e != nil {
-			log.Printf("err closing db after initializing schema failed: %s", e.Error())
-		}
-		return nil, err
-	}
-
-	return db, nil
 }

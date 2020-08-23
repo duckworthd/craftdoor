@@ -6,10 +6,30 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pakohan/craftdoor/config"
 )
 
-// InitDBSchema initializes the DB schema if the sqlite_master table has no entries
-func InitDBSchema(db *sqlx.DB) error {
+// OpenDB opens the database.
+func OpenDB(cfg *config.Config) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("sqlite3", cfg.SQLiteFile)
+	if err != nil {
+		return nil, err
+	}
+
+	err = InitDBSchema(db, cfg.SQLiteSchemaFile)
+	if err != nil {
+		e := db.Close()
+		if e != nil {
+			log.Printf("err closing db after initializing schema failed: %s", e.Error())
+		}
+		return nil, err
+	}
+
+	return db, nil
+}
+
+// InitDBSchema initializes the DB schema if the sqlite_master table has no entries.
+func InitDBSchema(db *sqlx.DB, schemaFile string) error {
 	var count int
 	err := db.Get(&count, checkTables)
 	if err != nil {
@@ -22,7 +42,7 @@ func InitDBSchema(db *sqlx.DB) error {
 
 	log.Printf("didn't find any tables, will init db schema")
 
-	f, err := os.Open("./schema.sql")
+	f, err := os.Open(schemaFile)
 	if err != nil {
 		return err
 	}

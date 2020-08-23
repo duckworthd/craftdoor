@@ -1,0 +1,15 @@
+[Unit]
+Description=Craftdoor Service
+After=network.target
+
+[Service]
+Environment=CRAFTDOOR_ROOT=/home/pi/craftdoor
+ExecStart=/home/pi/craftdoor/main --config=${CRAFTDOOR_ROOT}/develop.json
+WorkingDirectory=/home/pi/craftdoor
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

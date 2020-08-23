@@ -1,4 +1,0 @@
-{
-  "sqlite_file": "./develop.db",
-  "listen_http": ":8080"
-}

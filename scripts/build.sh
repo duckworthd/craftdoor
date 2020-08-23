@@ -1,20 +1,14 @@
 #!/bin/bash
 #
-# Build and release
+# Build binary and prepare release/ directory.
 #
 
 set -e
 
-BINARY="${1:-main}"
-if [[ "${BINARY}" == "main" ]]; then
-    SRC="cmd/master/"
-elif [[ "${BINARY}" == "read" ]]; then
-    SRC="cmd/debug/"
-else
-    echo "Unrecognized binary: ${BINARY}"
-    exit 1
-fi
-
+TARGET="${1:-cmd/master/main}"
+SRC=$(dirname "$TARGET")
+BINARY=$(basename "$TARGET")
+ASSETS_ROOT="assets/"
 DST="release/"
 
 # cd into project root.
@@ -36,11 +30,8 @@ env GOOS=linux \
     go build -o "${DST}/${BINARY}" "${SRC}/${BINARY}.go"
 
 # Copy auxiliary files.
-if [[ "${BINARY}" == "main" ]]; then
-    echo "Copying auxiliary files..."
-    cp ${SRC}/develop.json ${DST}/
-    cp ${SRC}/schema.sql ${DST}/
-fi
+echo "Copying auxiliary files..."
+cp -r ${ASSETS_ROOT}/* ${DST}/
 
 echo "Finished building '${SRC}'. Copy '${DST}' to your RPi and run it. For example,"
 echo "$ rsync -r release/ raspberrypi:/home/pi/craftdoor"

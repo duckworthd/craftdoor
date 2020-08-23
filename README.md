@@ -69,8 +69,9 @@ in this context.
 1. Run `cmd/master/main.go`. This will launch a webserver listening on port 8080.
   ```
   $ git clone https://github.com/pakohan/craftdoor.git
-  $ cd craftdoor/cmd/master
-  $ go run main.go develop.json
+  $ cd craftdoor
+  $ export CRAFTDOOR_ROOT=$(pwd)/assets
+  $ go run cmd/master/main.go --config=assets/develop.json
   ```
 
 # Usage
