@@ -84,8 +84,7 @@ the following,
 1. Add a symlink in `/etc/systemd/system` for `assets/craftdoor.service`.
   ```
   $ ssh raspberrypi
-  $ cd /etc/systemd/system
-  $ sudo ln -s "$HOME/craftdoor/craftdoor.service" craftdoor.service
+  $ sudo systemctl link $HOME/craftdoor/craftdoor.service
   ```
 1. Launch `craftdoor`. Ensure it's working correctly. if you see something
   like the following, it's working!
