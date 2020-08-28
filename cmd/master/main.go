@@ -13,7 +13,6 @@ package main
 import (
 	"flag"
 	"log"
-	"net"
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
@@ -90,25 +89,12 @@ func start(cfg *config.Config, db *sqlx.DB) error {
 		Handler: c,
 	}
 
-	log.Printf("listening on %s%s", GetOutboundIP(), cfg.ListenHTTP)
+	// TODO(duckworthd): Figure out how to get outbound IP address when the
+	// network doesn't reach the internet.
+	log.Printf("listening on port: %s", cfg.ListenHTTP)
 	err = srv.ListenAndServe()
 	if err == http.ErrServerClosed {
 		err = nil
 	}
 	return err
-}
-
-// GetOutboundIP retrieves the IP address of this machine.
-//
-// See https://stackoverflow.com/a/37382208/128580 for details.
-func GetOutboundIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP
 }

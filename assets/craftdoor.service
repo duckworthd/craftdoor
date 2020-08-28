@@ -1,10 +1,10 @@
 [Unit]
 Description=Craftdoor Service
-After=network.target
+After=network-online.target
+Requires=network-online.target
 
 [Service]
 Environment=CRAFTDOOR_ROOT=/home/pi/craftdoor
-ExecStartPre=/bin/sh -c 'until ping -c1 google.com; do sleep 1; done;'
 ExecStart=/home/pi/craftdoor/main --config=${CRAFTDOOR_ROOT}/develop.json
 WorkingDirectory=/home/pi/craftdoor
 StandardOutput=inherit
