@@ -19,6 +19,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pakohan/craftdoor/config"
 	"github.com/pakohan/craftdoor/controller"
+	"github.com/pakohan/craftdoor/door"
 	"github.com/pakohan/craftdoor/lib"
 	"github.com/pakohan/craftdoor/model"
 	"github.com/pakohan/craftdoor/rfid"
@@ -56,12 +57,18 @@ func main() {
 }
 
 func start(cfg *config.Config, db *sqlx.DB) error {
-	// Initialize RFID reader.
+	// Initialize RFID reader, door.
 	var r rfid.Reader
+	var d door.Door
 	var err error
 	if rpi.Present() {
-		host.Init()
+		log.Printf("Initializing rpi.")
+		_, err = host.Init()
+		if err != nil {
+			return err
+		}
 
+		log.Printf("Initializing rpi reader.")
 		r, err = rfid.NewMFRC522Reader()
 		if err != nil {
 			return err
@@ -72,15 +79,29 @@ func start(cfg *config.Config, db *sqlx.DB) error {
 			return err
 		}
 
-		log.Printf("Initializing rpi reader")
+		log.Printf("Initializing rpi door.")
+		d, err = door.NewRPiDoor()
+		if err != nil {
+			return err
+		}
+
 	} else {
-		r, _ = rfid.NewDummyReader()
 		log.Printf("Initializing dummy reader")
+		r, err = rfid.NewDummyReader()
+		if err != nil {
+			return err
+		}
+
+		log.Printf("Initializing dummy door")
+		d, _ = door.NewDummyDoor()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Setup backend database, etc.
 	m := model.New(db)
-	s := service.New(m, r)
+	s := service.New(m, r, d)
 	c := controller.New(cfg, m, s)
 
 	// Start HTTP server.

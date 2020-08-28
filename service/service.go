@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pakohan/craftdoor/door"
 	"github.com/pakohan/craftdoor/lib"
 	"github.com/pakohan/craftdoor/model"
 	"github.com/pakohan/craftdoor/rfid"
@@ -17,13 +18,15 @@ import (
 type Service struct {
 	m model.Model
 	r rfid.Reader
+	d door.Door
 }
 
 // New returns a new service instance
-func New(m model.Model, r rfid.Reader) *Service {
+func New(m model.Model, r rfid.Reader, d door.Door) *Service {
 	s := &Service{
 		m: m,
 		r: r,
+		d: d,
 	}
 
 	// Start infinite loop that unlocks the door.
@@ -105,10 +108,10 @@ func (s *Service) DoorAccessLoop() {
 
 		if accessAllowed {
 			log.Printf("Access granted for key=%s.", state.TagInfo.ID)
-			// TODO(duckworthd): Unlock a real door.
+			s.d.AuthOK()
 		} else {
 			log.Printf("Access NOT granted for key=%s.", state.TagInfo.ID)
+			s.d.AuthFail()
 		}
-		time.Sleep(3 * time.Second)
 	}
 }
