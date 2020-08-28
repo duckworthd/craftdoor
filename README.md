@@ -163,6 +163,10 @@ config/
 controller/
   controller.go      # HTTP request handling logic.
   ...
+door/                # wrapper for doors
+  door.go            # interface for interacting with doors.
+  dummy.go           # dummy implementation for interface Door
+  rpi.go             # Raspberry Pi implementation of interface Door
 lib/
   db.go              # initialize database schema
   state.go           # State of the system.
@@ -173,7 +177,7 @@ rfid/                # wrapper for RFID readers/writers
   dummy.go           # dummy implementation of interface Reader
   fmt.go             # format contents of an RFID tag as a string.
   mfrc522.go         # MFRC522 implementation of interface Reader
-  reader.go          # Interface for interacting with RFID readers.
+  reader.go          # interface for interacting with RFID readers.
 service/             # business logic for adding/removing keys, doors, etc
   service.go         # door-opening loop, access to RFID reader.
 vendor/              # third-party code
