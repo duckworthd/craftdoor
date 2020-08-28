@@ -3,7 +3,7 @@
 # craftdoor
 
 A RFID based access control system written in Go for Raspberry Pi + MFRCC522
-tag readers + MIFARE RFID tags.
+tag readers + MIFARE Classic 1K RFID tags.
 
 # Project Overview
 
@@ -51,8 +51,8 @@ To start the software suite, do the following on your development machine,
      Hostname 192.168.0.9  # Your IP address may vary!
      User pi
    ```
-1. Copy the contents of `release/` to the Raspberry Pi and run it. This will
-   launch a webserver on port :8080.
+1. Copy the contents of `release/` to `/home/pi/craftdoor` on the Raspberry
+   Pi and run it. This will launch a webserver on port :8080.
    ```
    $ bash scripts/deploy.sh
    ```
@@ -178,4 +178,18 @@ service/             # business logic for adding/removing keys, doors, etc
   service.go         # door-opening loop, access to RFID reader.
 vendor/              # third-party code
   ...
+```
+
+# Pin out
+
+```
+            Purpose               Pin  Pin            Purpose
+-------------------------------------+--------------------------------------------
+                                  13 | 14   Ground
+Authentication succeeded signal   15 | 16   Authentication failed signal
+                MFRC522's +3.3v   17 | 18   MFRC522's IRQ
+                 MFRC522's MOSI   19 | 20   MFRC522's Ground
+                 MFRC522's MISO   21 | 22   MFRC522's RST
+                  MFRC522's SCK   23 | 24   MFRC522's NSS or SDA
+-------------------------------------+--------------------------------------------
 ```
