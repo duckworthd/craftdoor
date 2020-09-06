@@ -186,14 +186,26 @@ vendor/              # third-party code
 
 # Pin out
 
+The Raspberry Pi is connected to 3 devices: an RC522 RFID reader, a
+"latch"-style lock connected to a door, and a "bolt"-style lock connected to
+the same door. The latch and bolt are both turned on when an authorized RFID
+tag is presented to the RC522 reader. The bolt is also turned on during
+Craftwerk's opening hours (5am to 11pm GMT+2).
+
 ```
-            Purpose               Pin  Pin            Purpose
--------------------------------------+--------------------------------------------
-                                  13 | 14   Ground
-Authentication succeeded signal   15 | 16   Authentication failed signal
-                MFRC522's +3.3v   17 | 18   MFRC522's IRQ
-                 MFRC522's MOSI   19 | 20   MFRC522's Ground
-                 MFRC522's MISO   21 | 22   MFRC522's RST
-                  MFRC522's SCK   23 | 24   MFRC522's NSS or SDA
--------------------------------------+--------------------------------------------
+         Purpose       Pin   Pin       Purpose
+---------------------------+----------------------------
+Bolt + Latch Relay VCC  01 | 02
+                        03 | 04
+                        05 | 06
+                        07 | 08
+                        09 | 10
+                        11 | 12
+         Bolt Relay IN  13 | 14  Bolt, Latch Relay GND
+        Latch Relay IN  15 | 16  (Auth failed signal)
+           MFRC522 VCC  17 | 18  MFRC522 IRQ
+          MFRC522 MOSI  19 | 20  MFRC522 GND
+          MFRC522 MISO  21 | 22  MFRC522 RST
+           MFRC522 SCK  23 | 24  MFRC522 NSS or SDA
+---------------------------+----------------------------
 ```

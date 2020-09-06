@@ -87,9 +87,10 @@ func (s *Service) ReadNextTag(timeout time.Duration) (*lib.State, error) {
 // When a new RFID tag is put in front of the door and the tag is approved for entry, the door is unlocked.
 func (s *Service) DoorAccessLoop() {
 	log.Println("Starting DoorAccessLoop()...")
+	timeout := 3 * time.Second
 	for {
 		// TODO(duckworthd): There is contention for ownership of the tag reader. Find a better way...
-		state, err := s.ReadNextTag(5 * time.Second)
+		state, err := s.ReadNextTag(timeout)
 		if err != nil {
 			log.Printf("Error encountered in DoorAccessLoop: %s", err)
 			continue
@@ -113,5 +114,10 @@ func (s *Service) DoorAccessLoop() {
 			log.Printf("Access NOT granted for key=%s.", state.TagInfo.ID)
 			s.d.AuthFail()
 		}
+
+		// TODO(duckworthd): Figure out how to remove the need for this timeout.
+		// AuthOK and AuthFail both enqueue messages and return instantaneously, which
+		// will cause this loop to cycle very quickly when a tag is available.
+		time.Sleep(timeout)
 	}
 }
