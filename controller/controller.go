@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/jpillora/ipfilter"
 	"github.com/pakohan/craftdoor/config"
 	"github.com/pakohan/craftdoor/controller/keys"
 	"github.com/pakohan/craftdoor/controller/members"
@@ -25,35 +26,45 @@ type controller struct {
 // New returns a new http.Handler
 func New(cfg *config.Config, m model.Model, s *service.Service) http.Handler {
 	r := mux.NewRouter()
+
+	// Filter
+	var handler http.Handler = handlers.CORS(
+		handlers.AllowedOrigins([]string{
+			"http://localhost:8081",
+			"http://localhost:8080",
+		}),
+		handlers.AllowedHeaders([]string{
+			"Authorization",
+			"Content-Type",
+			"Accept",
+			"Origin",
+			"User-Agent",
+			"DNT",
+			"Cache-Control",
+			"X-Mx-ReqToken",
+			"Keep-Alive",
+			"X-Requested-With",
+			"If-Modified-Since",
+		}),
+		handlers.AllowedMethods([]string{
+			"GET",
+			"PUT",
+			"POST",
+			"DELETE",
+			"HEAD",
+		}),
+	)(r)
+
+	// Filter by IP address.
+	handler = ipfilter.Wrap(handler, ipfilter.Options{
+		AllowedIPs:     []string{"192.168.0.0/24", "10.0.0.0/16"},
+		BlockByDefault: true,
+	})
+
 	c := &controller{
-		m: m,
-		s: s,
-		Handler: handlers.CORS(
-			handlers.AllowedOrigins([]string{
-				"http://localhost:8081",
-				"http://localhost:8080",
-			}),
-			handlers.AllowedHeaders([]string{
-				"Authorization",
-				"Content-Type",
-				"Accept",
-				"Origin",
-				"User-Agent",
-				"DNT",
-				"Cache-Control",
-				"X-Mx-ReqToken",
-				"Keep-Alive",
-				"X-Requested-With",
-				"If-Modified-Since",
-			}),
-			handlers.AllowedMethods([]string{
-				"GET",
-				"PUT",
-				"POST",
-				"DELETE",
-				"HEAD",
-			}),
-		)(r),
+		m:       m,
+		s:       s,
+		Handler: handler,
 	}
 	r.Path("/api").Methods(http.MethodGet).HandlerFunc(c.ReadNextTag)
 	members.New(r.PathPrefix("/api/members").Subrouter(), m)
