@@ -131,14 +131,14 @@ func (r *BasicLatch) Unlock(duration time.Duration) error {
 // LatchLoop is an infinite loop monitoring the latch.
 func (r *BasicLatch) LatchLoop() {
 	log.Println("Starting BasicLatch.LatchLoop().")
-	r.pin.Out(gpio.Low)
+	r.pin.Out(gpio.High)
 
 	for {
 		duration := <-r.unlockCh
 		log.Printf("Unlock event received. Holding latch open for: %s", duration)
-		r.pin.Out(gpio.High)
-		time.Sleep(duration)
 		r.pin.Out(gpio.Low)
+		time.Sleep(duration)
+		r.pin.Out(gpio.High)
 	}
 }
 
@@ -198,7 +198,7 @@ func (r *TimedEntryLatch) LatchLoop() {
 			timer = time.NewTimer(next.Sub(now))
 		case duration := <-r.unlockCh:
 			log.Printf("Unlock event received. Holding latch open for: %s", duration)
-			r.pin.Out(gpio.High)
+			r.pin.Out(gpio.Low)
 			time.Sleep(duration)
 			r.pin.Out(r.BaselineLevel(time.Now()))
 		}
@@ -218,9 +218,9 @@ func (r *TimedEntryLatch) BaselineLevel(t time.Time) gpio.Level {
 	openTill := time.Date(t.Year(), t.Month(), t.Day(), e.Hour(), e.Minute(), e.Second(), e.Nanosecond(), t.Location())
 
 	if openFrom.Before(t) && t.Before(openTill) {
-		return gpio.High
+		return gpio.Low
 	}
-	return gpio.Low
+	return gpio.High
 }
 
 // NextTimedEntryEvent returns the time of the next timed entry event.
