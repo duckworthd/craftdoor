@@ -59,7 +59,7 @@ func (r *MFRC522Reader) Initialize() error {
 		return err
 	}
 
-	err = r.device.SetAntennaGain(5)
+	err = r.device.SetAntennaGain(7)
 	if err != nil {
 		log.Println("Failed to set antenna gain.")
 		return err
