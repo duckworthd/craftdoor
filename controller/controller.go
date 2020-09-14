@@ -57,7 +57,7 @@ func New(cfg *config.Config, m model.Model, s *service.Service) http.Handler {
 
 	// Filter by IP address.
 	handler = ipfilter.Wrap(handler, ipfilter.Options{
-		AllowedIPs:     []string{"192.168.0.0/24", "10.0.0.0/16"},
+		AllowedIPs:     []string{"192.168.0.0/24", "10.0.1.0/24", "10.0.0.0/24"},
 		BlockByDefault: true,
 	})
 
