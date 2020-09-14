@@ -209,3 +209,7 @@ Bolt + Latch Relay VCC  01 | 02
            MFRC522 SCK  23 | 24  MFRC522 NSS or SDA
 ---------------------------+----------------------------
 ```
+
+See [this wiring
+diagram](https://docs.google.com/presentation/d/10eRQjaiUFfwjsG38sFQJQBeT_RCGd-otQt9Cu7onGyA/edit?usp=sharing)
+for further details.
